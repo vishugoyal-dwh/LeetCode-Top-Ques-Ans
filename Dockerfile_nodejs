@@ -1,0 +1,23 @@
+# --- build stage ---
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+# If you have TypeScript or a build step, copy the rest and build:
+# COPY . .
+# RUN npm run build
+
+# --- runtime stage ---
+FROM node:20-alpine
+ENV NODE_ENV=production \
+    PORT=3000
+WORKDIR /app
+# Copy only prod deps and source
+COPY --from=build /app/node_modules ./node_modules
+COPY . .
+# If using TypeScript output, copy dist only:
+# COPY --from=build /app/dist ./dist
+USER node
+EXPOSE 3000
+CMD ["node", "server.js"]
+# If TS build: CMD ["node", "dist/server.js"]
